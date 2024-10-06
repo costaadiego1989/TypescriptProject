@@ -28,7 +28,7 @@ function normalizeData(transacao: ITransacaoAPI) {
     return {
         nome: transacao.Nome,
         id: transacao.ID,
-        data: transacao.Data,
+        data: textoParaData(transacao.Data),
         status: transacao.Status,
         email: transacao.Email,
         moeda: moedaParaNumero(transacao["Valor (R$)"]),
@@ -41,6 +41,14 @@ function normalizeData(transacao: ITransacaoAPI) {
 function moedaParaNumero(moeda: string): number | null {
     const numero = Number(moeda.replaceAll(".", "").replace(",", "."));
     return isNaN(numero) ? null : numero;
+}
+
+function textoParaData(texto: string) {
+    const [data, tempo] = texto.split(" ");
+    const [dia, mes, ano] = data.split("/").map(Number);
+    const [hora, minuto] = tempo.split(":").map(Number);
+
+    return new Date(dia, mes - 1, ano, hora, minuto);
 }
 
 async function handleData() {

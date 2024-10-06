@@ -16,7 +16,7 @@ function normalizeData(transacao) {
     return {
         nome: transacao.Nome,
         id: transacao.ID,
-        data: transacao.Data,
+        data: textoParaData(transacao.Data),
         status: transacao.Status,
         email: transacao.Email,
         moeda: moedaParaNumero(transacao["Valor (R$)"]),
@@ -28,6 +28,12 @@ function normalizeData(transacao) {
 function moedaParaNumero(moeda) {
     const numero = Number(moeda.replaceAll(".", "").replace(",", "."));
     return isNaN(numero) ? null : numero;
+}
+function textoParaData(texto) {
+    const [data, tempo] = texto.split(" ");
+    const [dia, mes, ano] = data.split("/").map(Number);
+    const [hora, minuto] = tempo.split(":").map(Number);
+    return new Date(dia, mes - 1, ano, hora, minuto);
 }
 async function handleData() {
     const data = await fetchData('https://api.origamid.dev/json/transacoes.json');

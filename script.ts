@@ -24,7 +24,19 @@ interface ITransacaoAPI {
     ["Cliente Novo"]: number
 }
 
-function normalizeData(transacao: ITransacaoAPI) {
+interface ITransacaoNormalized {
+    nome: string,
+    id: string,
+    data: Date,
+    status: TransacaoStatus,
+    email: string,
+    moeda: string | null | number,
+    valor: number | null,
+    formaPagamento: TransacaoPagamento,
+    clienteNovo: boolean
+}
+
+function normalizeData(transacao: ITransacaoAPI): ITransacaoNormalized {
     return {
         nome: transacao.Nome,
         id: transacao.ID,
@@ -54,8 +66,12 @@ function textoParaData(texto: string) {
 async function handleData() {
     const data = await fetchData<ITransacaoAPI[]>('https://api.origamid.dev/json/transacoes.json');
     if (!data) return;
-    const x = data.map(normalizeData);
-    console.log(x);
+    const transacoes = data.map(normalizeData);
+    preencherTabela(transacoes);    
+}
+
+function preencherTabela(transacao: ITransacaoNormalized[]): void {
+    if(!transacao) return;
     
 }
 

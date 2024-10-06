@@ -39,7 +39,11 @@ async function handleData() {
     const data = await fetchData('https://api.origamid.dev/json/transacoes.json');
     if (!data)
         return;
-    const x = data.map(normalizeData);
-    console.log(x);
+    const transacoes = data.map(normalizeData);
+    preencherTabela(transacoes);
+}
+function preencherTabela(transacao) {
+    if (!transacao)
+        return;
 }
 handleData();

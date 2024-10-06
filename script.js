@@ -19,11 +19,15 @@ function normalizeData(transacao) {
         data: transacao.Data,
         status: transacao.Status,
         email: transacao.Email,
-        moeda: transacao["Valor (R$)"],
+        moeda: moedaParaNumero(transacao["Valor (R$)"]),
         valor: 0,
         formaPagamento: transacao["Forma de Pagamento"],
         clienteNovo: Boolean(transacao["Cliente Novo"])
     };
+}
+function moedaParaNumero(moeda) {
+    const numero = Number(moeda.replaceAll(".", "").replace(",", "."));
+    return isNaN(numero) ? null : numero;
 }
 async function handleData() {
     const data = await fetchData('https://api.origamid.dev/json/transacoes.json');

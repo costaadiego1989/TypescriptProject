@@ -31,11 +31,16 @@ function normalizeData(transacao: ITransacaoAPI) {
         data: transacao.Data,
         status: transacao.Status,
         email: transacao.Email,
-        moeda: transacao["Valor (R$)"],
+        moeda: moedaParaNumero(transacao["Valor (R$)"]),
         valor: 0,
         formaPagamento: transacao["Forma de Pagamento"],
         clienteNovo: Boolean(transacao["Cliente Novo"])
     }
+}
+
+function moedaParaNumero(moeda: string): number | null {
+    const numero = Number(moeda.replaceAll(".", "").replace(",", "."));
+    return isNaN(numero) ? null : numero;
 }
 
 async function handleData() {

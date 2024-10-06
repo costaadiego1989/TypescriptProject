@@ -19,8 +19,8 @@ function normalizeData(transacao) {
         data: textoParaData(transacao.Data),
         status: transacao.Status,
         email: transacao.Email,
-        moeda: moedaParaNumero(transacao["Valor (R$)"]),
-        valor: 0,
+        moeda: transacao["Valor (R$)"],
+        valor: moedaParaNumero(transacao["Valor (R$)"]),
         formaPagamento: transacao["Forma de Pagamento"],
         clienteNovo: Boolean(transacao["Cliente Novo"])
     };
@@ -41,9 +41,60 @@ async function handleData() {
         return;
     const transacoes = data.map(normalizeData);
     preencherTabela(transacoes);
+    preencherEstatisticas(transacoes);
 }
-function preencherTabela(transacao) {
-    if (!transacao)
+function filtrarValor(transacao) {
+    return transacao.valor !== null;
+}
+function preencherEstatisticas(transacoes) {
+    const estatisticas = new Estatisticas(transacoes);
+    const campoEstatisticaTotal = document.querySelector("#total");
+    if (!campoEstatisticaTotal)
         return;
+    campoEstatisticaTotal.innerText = `R$ ${estatisticas.total.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    })}`;
+}
+class Estatisticas {
+    transacoes;
+    total;
+    constructor(transacoes) {
+        this.transacoes = transacoes;
+        this.total = this.pegarValor();
+    }
+    pegarValor() {
+        return this.transacoes.filter(filtrarValor).reduce((acc, atual) => {
+            return acc + atual.valor;
+        }, 0);
+    }
+}
+function preencherTabela(transacoes) {
+    if (!transacoes)
+        return;
+    const tabela = document.querySelector("#transacoes tbody");
+    if (!tabela)
+        return;
+    transacoes.forEach(transacao => {
+        tabela.innerHTML += `
+            <tr>
+                <td>
+                    ${transacao.nome}
+                </td>
+                                <td>
+                    ${transacao.email}
+                </td>
+                                <td>
+                    ${transacao.moeda}
+                </td>
+                                <td>
+                    ${transacao.formaPagamento}
+                </td>
+                                <td>
+                    ${transacao.status}
+                </td>
+            </tr>
+        `;
+    });
 }
 handleData();

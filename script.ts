@@ -30,7 +30,7 @@ interface ITransacaoNormalized {
     data: Date,
     status: TransacaoStatus,
     email: string,
-    moeda: string | null | number,
+    moeda: string,
     valor: number | null,
     formaPagamento: TransacaoPagamento,
     clienteNovo: boolean
@@ -43,8 +43,8 @@ function normalizeData(transacao: ITransacaoAPI): ITransacaoNormalized {
         data: textoParaData(transacao.Data),
         status: transacao.Status,
         email: transacao.Email,
-        moeda: moedaParaNumero(transacao["Valor (R$)"]),
-        valor: 0,
+        moeda: transacao["Valor (R$)"],
+        valor: moedaParaNumero(transacao["Valor (R$)"]),
         formaPagamento: transacao["Forma de Pagamento"],
         clienteNovo: Boolean(transacao["Cliente Novo"])
     }
@@ -67,12 +67,66 @@ async function handleData() {
     const data = await fetchData<ITransacaoAPI[]>('https://api.origamid.dev/json/transacoes.json');
     if (!data) return;
     const transacoes = data.map(normalizeData);
-    preencherTabela(transacoes);    
+    preencherTabela(transacoes); 
+    preencherEstatisticas(transacoes); 
 }
 
-function preencherTabela(transacao: ITransacaoNormalized[]): void {
-    if(!transacao) return;
-    
+type TransacaoValor = ITransacaoNormalized & { valor: number };
+
+function filtrarValor(transacao: ITransacaoNormalized): transacao is TransacaoValor {
+    return transacao.valor !== null;
+}
+
+function preencherEstatisticas(transacoes: ITransacaoNormalized[]): void {
+    const estatisticas = new Estatisticas(transacoes);
+    const campoEstatisticaTotal = document.querySelector<HTMLElement>("#total");
+    if (!campoEstatisticaTotal) return;
+    campoEstatisticaTotal.innerText = `R$ ${estatisticas.total.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+    })}`;
+}
+
+class Estatisticas {
+    private transacoes;
+    total;
+    constructor(transacoes: ITransacaoNormalized[]) {
+        this.transacoes = transacoes;
+        this.total = this.pegarValor();
+    }
+
+    private pegarValor() {       
+        return this.transacoes.filter(filtrarValor).reduce((acc, atual) => {            
+            return acc + atual.valor;
+        }, 0)        
+    }
+}
+
+function preencherTabela(transacoes: ITransacaoNormalized[]): void {
+    if(!transacoes) return;
+    const tabela = document.querySelector("#transacoes tbody");
+    if(!tabela) return;
+    transacoes.forEach(transacao => {
+        tabela.innerHTML += `
+            <tr>
+                <td>
+                    ${transacao.nome}
+                </td>
+                                <td>
+                    ${transacao.email}
+                </td>
+                                <td>
+                    ${transacao.moeda}
+                </td>
+                                <td>
+                    ${transacao.formaPagamento}
+                </td>
+                                <td>
+                    ${transacao.status}
+                </td>
+            </tr>
+        `;
+    })
 }
 
 handleData();

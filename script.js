@@ -26,8 +26,10 @@ function normalizeData(transacao) {
     };
 }
 async function handleData() {
-    const request = await fetchData('https://api.origamid.dev/json/transacoes.json');
-    console.log(request);
-    return request;
+    const data = await fetchData('https://api.origamid.dev/json/transacoes.json');
+    if (!data)
+        return;
+    const x = data.map(normalizeData);
+    console.log(x);
 }
 handleData();

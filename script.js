@@ -46,27 +46,64 @@ async function handleData() {
 function filtrarValor(transacao) {
     return transacao.valor !== null;
 }
+function pegarPagamentosEEstatus(lista, containerId) {
+    const containerElement = document.querySelector(containerId);
+    if (!containerElement)
+        return;
+    Object.keys(lista).forEach((key) => {
+        containerElement.innerHTML += `<p>${key}: ${lista[key]}</>`;
+    });
+}
 function preencherEstatisticas(transacoes) {
     const estatisticas = new Estatisticas(transacoes);
     const campoEstatisticaTotal = document.querySelector("#total");
     if (!campoEstatisticaTotal)
         return;
-    campoEstatisticaTotal.innerText = `R$ ${estatisticas.total.toLocaleString("pt-BR", {
+    campoEstatisticaTotal.innerText = `${estatisticas.total.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL"
     })}`;
+    pegarPagamentosEEstatus(estatisticas.pagamentos, "#pagamento");
+    pegarPagamentosEEstatus(estatisticas.status, "#status");
 }
 class Estatisticas {
     transacoes;
     total;
+    pagamentos;
+    status;
     constructor(transacoes) {
         this.transacoes = transacoes;
         this.total = this.pegarValor();
+        this.pagamentos = this.setPagamentos();
+        this.status = this.setStatus();
     }
     pegarValor() {
         return this.transacoes.filter(filtrarValor).reduce((acc, atual) => {
             return acc + atual.valor;
         }, 0);
+    }
+    setPagamentos() {
+        return this.transacoes.reduce((acc, { formaPagamento }) => {
+            if (acc[formaPagamento]) {
+                acc[formaPagamento]++;
+            }
+            else {
+                acc[formaPagamento] = 1;
+            }
+            return acc;
+        }, {});
+    }
+    setStatus() {
+        return this.transacoes.reduce((acc, { status }) => {
+            if (acc[status]) {
+                acc[status]++;
+            }
+            else {
+                acc[status] = 1;
+            }
+            console.log(acc);
+            return acc;
+        }, {});
     }
 }
 function preencherTabela(transacoes) {

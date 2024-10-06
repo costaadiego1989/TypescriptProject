@@ -36,6 +36,10 @@ interface ITransacaoNormalized {
     clienteNovo: boolean
 }
 
+interface ListaContagem {
+    [key: string]: number    
+}
+
 function normalizeData(transacao: ITransacaoAPI): ITransacaoNormalized {
     return {
         nome: transacao.Nome,
@@ -77,28 +81,71 @@ function filtrarValor(transacao: ITransacaoNormalized): transacao is TransacaoVa
     return transacao.valor !== null;
 }
 
+function pegarPagamentosEEstatus(lista: ListaContagem, containerId: string): void {
+    const containerElement = document.querySelector<HTMLElement>(containerId);
+
+    if (!containerElement) return;
+
+    Object.keys(lista).forEach((key) => {
+        containerElement.innerHTML += `<p>${key}: ${lista[key]}</>`;
+    })
+}
+
 function preencherEstatisticas(transacoes: ITransacaoNormalized[]): void {
     const estatisticas = new Estatisticas(transacoes);
     const campoEstatisticaTotal = document.querySelector<HTMLElement>("#total");
+
     if (!campoEstatisticaTotal) return;
-    campoEstatisticaTotal.innerText = `R$ ${estatisticas.total.toLocaleString("pt-BR", {
+
+    campoEstatisticaTotal.innerText = `${estatisticas.total.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL"
     })}`;
+
+    pegarPagamentosEEstatus(estatisticas.pagamentos, "#pagamento");
+    pegarPagamentosEEstatus(estatisticas.status, "#status");
 }
 
 class Estatisticas {
     private transacoes;
     total;
+    pagamentos;
+    status;
     constructor(transacoes: ITransacaoNormalized[]) {
         this.transacoes = transacoes;
         this.total = this.pegarValor();
+        this.pagamentos = this.setPagamentos();
+        this.status = this.setStatus();
     }
 
     private pegarValor() {       
         return this.transacoes.filter(filtrarValor).reduce((acc, atual) => {            
             return acc + atual.valor;
         }, 0)        
+    }
+
+    private setPagamentos(): ListaContagem {
+        return this.transacoes.reduce((acc: ListaContagem, { formaPagamento }) => {
+            if (acc[formaPagamento]) {
+                acc[formaPagamento]++;
+            } else {
+                acc[formaPagamento] = 1;
+            }            
+            return acc;
+        }, {});
+    }
+
+    private setStatus() {
+        return this.transacoes.reduce((acc: ListaContagem, { status }) => {
+            if (acc[status]) {
+                acc[status]++;
+            } else {
+                acc[status] = 1;
+            }
+            console.log(acc);
+            
+            return acc;
+        }, {});
     }
 }
 
